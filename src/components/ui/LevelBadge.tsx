@@ -9,21 +9,21 @@ export type LevelBadgeProps = {
 
 export function LevelBadge({ level, size = 'md', style }: LevelBadgeProps) {
   const colors = useTheme();
-  const cfg = size === 'sm' ? styles.sm : size === 'lg' ? styles.lg : styles.md;
+  const s = size === 'sm' ? styles.sm : size === 'lg' ? styles.lg : styles.md;
   return (
     <View
       style={[
-        cfg.badge,
+        s.badge,
         { backgroundColor: colors.primarySoft, borderColor: colors.primary },
         style,
       ]}
     >
-      <Text style={cfg.text}>Lv. {level}</Text>
+      <Text style={s.text}>Lv. {level}</Text>
     </View>
   );
 }
 
-const base = { borderRadius: 999, borderWidth: 1.5, fontWeight: '700' } as const;
+const base = { borderRadius: 999, borderWidth: 1.5, fontWeight: '700' };
 const styles = StyleSheet.create({
   sm: { badge: { ...base, paddingHorizontal: 8, paddingVertical: 2 }, text: { color: '#2563eb', fontSize: 12 } },
   md: { badge: { ...base, paddingHorizontal: 12, paddingVertical: 4 }, text: { color: '#2563eb', fontSize: 14 } },

@@ -1,15 +1,16 @@
 import { View, StyleSheet, Keyboard, Alert } from 'react-native';
 import { useRouter, Link } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../../src/store/authStore';
-import { useTheme } from '../../src/theme';
+import { useTheme, useIsDark } from '../../src/theme';
 import { ThemeText } from '../../src/components/ui/Text';
 import { Button } from '../../src/components/ui/Button';
 import { FormInput } from '../../src/components/forms/FormInput';
-import { StatusBar } from 'expo-status-bar';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const colors = useTheme();
+  const isDark = useIsDark();
   const { signUp, error, clearError, loading } = useAuth((s) => ({
     signUp: s.signUp,
     error: s.error,
@@ -32,7 +33,7 @@ export default function RegisterScreen() {
       Alert.alert('Passwords do not match', 'Please try again.');
       return;
     }
-    const res = await signUp({ email: emailRef.value, password: passRef.value });
+    const res = await signUp(emailRef.value, passRef.value);
     if (res.error) {
       if (String(res.error?.__raw?.message ?? '').includes('registration')) {
         Alert.alert('Registration is closed', 'This application is for a single student account.');
@@ -42,15 +43,15 @@ export default function RegisterScreen() {
     if (res.needsEmailConfirmation) {
       Alert.alert('Check your email', 'A confirmation link has been sent.');
     } else {
-      router.replace('/(app)');
+      router.replace('/(app)' as any);
     }
   };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar style={colors.background === '#0f172a' ? 'light' : 'dark'} />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <View style={styles.card}>
-        <ThemeText variant="h1" style={{ marginBottom: 8, textAlign: 'center' }}>Create your account</ThemeText>
+        <ThemeText variant="h2" style={{ marginBottom: 8, textAlign: 'center' }}>Create your account</ThemeText>
         <ThemeText variant="body" style={{ color: colors.textSecondary, marginBottom: 24, textAlign: 'center' }}>
           This is a private study space for one student.
         </ThemeText>

@@ -184,11 +184,6 @@ export async function uploadDocuments(files: UploadableFile[], opts: UploadOptio
   if (!user) throw new Error('Not authenticated');
 
   // 1. Create an assignment to group the files (homework may be multi-image).
-  const assignmentTx = await supabase.rpc('log_activity', {
-    p_user: user.id,
-    p_kind: opts.documentType,
-    p_metadata: JSON.stringify({ source: 'upload' }),
-  });
   let assignmentId: string | undefined;
   if (files.length > 1 || opts.assignmentName) {
     const name = opts.assignmentName ?? `${opts.documentType} — ${new Date().toLocaleDateString()}`;

@@ -1,10 +1,4 @@
 import { registerRootComponent } from 'expo';
-import { ExpoRoot } from 'expo-router';
+import { default as ExpoRoot } from 'expo-router/entry';
 
-// Must be exported as default
-export default function Root() {
-  const ctx = ExpoRoot(require.context('./app'));
-  return ctx;
-}
-
-registerRootComponent(Root);
+registerRootComponent(ExpoRoot);

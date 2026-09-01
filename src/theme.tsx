@@ -1,8 +1,31 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
-import { useUIStore } from '../store/uiStore';
+import { useUIStore } from './store/uiStore';
 
-export const palettes = {
+export interface Palette {
+  background: string;
+  card: string;
+  cardAlt: string;
+  text: string;
+  textSecondary: string;
+  textTertiary: string;
+  primary: string;
+  primarySoft: string;
+  accent: string;
+  border: string;
+  borderAlt: string;
+  success: string;
+  successSoft: string;
+  warning: string;
+  warningSoft: string;
+  danger: string;
+  dangerSoft: string;
+  gold: string;
+  goldSoft: string;
+  surface: string;
+}
+
+export const palettes: { light: Palette; dark: Palette } = {
   light: {
     background: '#ffffff',
     card: '#f8fafc',
@@ -47,20 +70,29 @@ export const palettes = {
     goldSoft: '#422006',
     surface: '#111827',
   },
-} as const;
+};
 
-export type Palette = typeof palettes.light;
+interface ThemeState {
+  colors: Palette;
+  isDark: boolean;
+}
 
-export const ThemeContext = createContext<Palette>(palettes.light);
+export const ThemeContext = createContext<ThemeState>({ colors: palettes.light, isDark: false });
 
 export function useTheme() {
-  return useContext(ThemeContext);
+  return useContext(ThemeContext).colors;
+}
+
+export function useIsDark() {
+  return useContext(ThemeContext).isDark;
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const cs = useColorScheme();
   const override = useUIStore((s) => s.themeOverride);
-  const scheme = override ?? cs ?? 'light';
-  const colors = scheme === 'dark' ? palettes.dark : palettes.light;
-  return <ThemeContext.Provider value={colors}>{children}</ThemeContext.Provider>;
+  const isDark = override === 'dark' || (override === null && cs === 'dark');
+  const colors = (override ?? cs ?? 'light') === 'dark' ? palettes.dark : palettes.light;
+  return (
+    <ThemeContext.Provider value={{ colors, isDark }}>{children}</ThemeContext.Provider>
+  );
 }

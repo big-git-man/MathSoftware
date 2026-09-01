@@ -2,7 +2,6 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
@@ -12,7 +11,11 @@
     "src",
     "index.ts",
     "app.config.ts",
-    "env.d.ts",
-    "supabase"
+    "env.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "babel.config.js",
+    "supabase/functions"
   ]
 }

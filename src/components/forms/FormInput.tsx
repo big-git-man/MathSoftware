@@ -1,5 +1,5 @@
 import { View, TextInput, StyleSheet, TextInputProps, Platform } from 'react-native';
-import { useTheme } from '../theme';
+import { useTheme } from '../../theme';
 import { ThemeText } from '../ui/Text';
 
 export type FormInputProps = TextInputProps & {

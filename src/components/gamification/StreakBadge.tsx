@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { Flame } from 'lucide-react-native';
-import { useTheme } from '../theme';
+import { useTheme } from '../../theme';
 
 export type StreakBadgeProps = { days: number; size?: 'sm' | 'md'; style?: ViewStyle };
 

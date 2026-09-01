@@ -1,7 +1,6 @@
 import 'dotenv/config';
-import { ExpoConfig } from 'expo/config';
 
-export default ({ config }: { config: ExpoConfig }): ExpoConfig => ({
+export default ({ config }: { config: Record<string, any> }) => ({
   ...config,
   name: 'MathsTutor',
   slug: 'mathstutor',
@@ -32,15 +31,12 @@ export default ({ config }: { config: ExpoConfig }): ExpoConfig => ({
   },
   plugins: [
     'expo-router',
-    ['expo-document-picker'],
+    'expo-document-picker',
     [
       'expo-notifications',
-      {
-        icon: './assets/icon.png',
-        color: '#ffffff',
-      },
+      { icon: './assets/icon.png', color: '#ffffff' },
     ],
-    ['expo-image-picker'],
+    'expo-image-manipulator',
   ],
   extra: {
     SUPABASE_URL: process.env.SUPABASE_URL,

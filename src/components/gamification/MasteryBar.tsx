@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { useTheme } from '../theme';
+import { useTheme } from '../../theme';
 import { ThemeText } from '../ui/Text';
 import { ProgressBar } from '../ui/ProgressBar';
 

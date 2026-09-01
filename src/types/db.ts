@@ -401,7 +401,19 @@ type DatabaseFunctions = {
     Returns: number
   }
   recompute_streak: { Args: { p_user: UUID }; Returns: number }
-  generate_missions: { Args: { p_user: UUID; p_date?: string | null }; Returns: { mission_id: UUID }[] }
+  generate_missions: {
+    Args: { p_user: UUID; p_date?: string | null }
+    Returns: {
+      mission_id: UUID
+      code: string
+      type: string
+      name: string
+      progress: number
+      target: number
+      status: string
+      xp_reward: number
+    }[]
+  }
   advance_mission: { Args: { p_user: UUID; p_code: string; p_increment?: number | null }; Returns: boolean }
   complete_lesson: { Args: { p_user: UUID; p_lesson: UUID }; Returns: void }
   check_achievements: { Args: { p_user: UUID }; Returns: { achievement_id: UUID; code: string; unlocked: boolean }[] }
