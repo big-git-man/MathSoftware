@@ -33,10 +33,8 @@ select public.apply_owner_policies('public.topics', 'user_id');
 select public.apply_owner_policies('public.lessons', 'user_id');
 select public.apply_owner_policies('public.tags', 'user_id');
 select public.apply_owner_policies('public.assignments', 'user_id');
-select public.apply_owner_policies('public.assignment_documents', 'user_id');
 select public.apply_owner_policies('public.documents', 'user_id');
 select public.apply_owner_policies('public.document_pages', 'user_id');
-select public.apply_owner_policies('public.document_tags', 'user_id');
 select public.apply_owner_policies('public.document_processing_jobs', 'user_id');
 select public.apply_owner_policies('public.practice_questions', 'user_id');
 select public.apply_owner_policies('public.study_sessions', 'user_id');
@@ -48,7 +46,6 @@ select public.apply_owner_policies('public.user_achievements', 'user_id');
 select public.apply_owner_policies('public.user_missions', 'user_id');
 select public.apply_owner_policies('public.topic_mastery', 'user_id');
 select public.apply_owner_policies('public.ai_conversations', 'user_id');
-select public.apply_owner_policies('public.ai_messages', 'user_id');
 
 -- practice_questions: shared bank (user_id IS NULL) is readable by everyone,
 -- own rows are fully owned. Shared questions are NOT insertable by the client.
@@ -118,3 +115,38 @@ $$;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.on_auth_user_created();
+
+
+-- Join tables inherit ownership through their parent records.
+alter table public.assignment_documents enable row level security;
+alter table public.assignment_documents force row level security;
+create policy "assignment_documents_owner" on public.assignment_documents
+  for all using (
+    exists (select 1 from public.assignments a where a.id = assignment_id and a.user_id = auth.uid())
+  ) with check (
+    exists (select 1 from public.assignments a where a.id = assignment_id and a.user_id = auth.uid())
+  );
+
+alter table public.document_tags enable row level security;
+alter table public.document_tags force row level security;
+create policy "document_tags_owner" on public.document_tags
+  for all using (
+    exists (select 1 from public.documents d where d.id = document_id and d.user_id = auth.uid())
+  ) with check (
+    exists (select 1 from public.documents d where d.id = document_id and d.user_id = auth.uid())
+  );
+
+alter table public.ai_messages enable row level security;
+alter table public.ai_messages force row level security;
+create policy "ai_messages_owner" on public.ai_messages
+  for all using (
+    exists (
+      select 1 from public.ai_conversations c
+      where c.id = conversation_id and c.user_id = auth.uid()
+    )
+  ) with check (
+    exists (
+      select 1 from public.ai_conversations c
+      where c.id = conversation_id and c.user_id = auth.uid()
+    )
+  );
