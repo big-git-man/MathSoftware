@@ -1,5 +1,13 @@
 {
   "enabledPlugins": {
     "expo@claude-plugins-official": true
-  }
+  },
+  "permissions": [
+    {
+      "plugin": "expo@claude-plugins-official",
+      "action": "external_directory",
+      "resource": "*",
+      "effect": "allow"
+    }
+  ]
 }
