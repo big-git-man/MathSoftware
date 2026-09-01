@@ -12,22 +12,26 @@ export function useDocuments() {
     setLoading(true);
     const { data: rows, error } = await listDocuments();
     const docs: DocumentMeta[] = await Promise.all(
-      rows.map(async (r: any) => {
-        const signed =
-          r.type === 'image'
-            ? await getSignedUrl(r.storage_bucket ?? 'documents', r.storage_path)
-            : { url: null };
+      (rows ?? []).map(async (r: any) => {
+        const mime = r.mime_type ?? '';
+        const isImage = mime.startsWith('image/');
+        const signed = isImage
+          ? await getSignedUrl(r.storage_bucket ?? 'documents', r.storage_path)
+          : { url: null as string | null };
+        const thumb = r.thumbnail_path
+          ? await getSignedUrl(r.storage_bucket ?? 'documents', r.thumbnail_path)
+          : { url: null as string | null };
         return {
           id: r.id,
           title: r.title,
           description: r.description,
-          type: r.type,
+          type: isImage ? 'image' : 'pdf',
+          mime_type: mime,
           uri: signed.url,
-          thumbnail_url: r.thumbnail_path
-            ? (await getSignedUrl(r.storage_bucket ?? 'documents', r.thumbnail_path)).url
-            : null,
+          thumbnail_url: thumb.url,
           storage_path: r.storage_path,
           bucket: r.storage_bucket ?? 'documents',
+          document_type: r.document_type,
           subject: r.subjects ? { name: r.subjects.name } : null,
           course: r.courses ? { name: r.courses.name } : null,
           unit: r.units ? { name: r.units.name } : null,

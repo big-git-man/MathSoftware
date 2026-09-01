@@ -2,17 +2,17 @@ import { useEffect } from 'react';
 import { Slot } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '../src/theme';
-import { useAuthStore } from '../src/store/authStore';
+import { useAuth } from '../src/store/authStore';
 import * as SplashScreen from 'expo-splash-screen';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const initialized = useAuthStore((s) => s.initialized);
+  const initialized = useAuth((s) => s.initialized);
 
   useEffect(() => {
     let unsub: (() => void) | undefined;
-    void useAuthStore.getState().initialize().then((u) => {
+    void useAuth.getState().initialize().then((u) => {
       unsub = u;
     });
     return () => {

@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
-import { useTheme } from '../theme';
+import { useTheme } from '../../theme';
 import { ThemeText } from '../ui/Text';
 import { ProgressBar } from '../ui/ProgressBar';
 import { Check } from 'lucide-react-native';

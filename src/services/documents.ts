@@ -1,6 +1,26 @@
 import { supabase } from '../api/supabase';
 import type { Tables } from '../types/db';
 
+export type DocumentMeta = {
+  id: string;
+  title: string;
+  description?: string;
+  type: 'pdf' | 'image';
+  mime_type: string;
+  uri: string | null;
+  thumbnail_url: string | null;
+  storage_path: string;
+  bucket: string;
+  document_type?: string;
+  subject: { name: string } | null;
+  course: { name: string } | null;
+  unit: { name: string } | null;
+  topic: { name: string } | null;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+};
+
 export type DocumentRow = Tables<'documents'>;
 export type DocumentType = NonNull<DocumentRow['document_type']>;
 export type ProcessingStatus = NonNull<DocumentRow['processing_status']>;
@@ -67,6 +87,11 @@ export async function setDocumentFavorite(id: string, favorite: boolean) {
 
 export async function deleteDocument(id: string) {
   return supabase.from('documents').delete().eq('id', id);
+}
+
+export async function getSignedUrl(bucket: string, path: string, expiresIn = 120) {
+  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, expiresIn);
+  return { url: data?.signedUrl ?? null, error };
 }
 
 export async function getAssignment(id: string) {

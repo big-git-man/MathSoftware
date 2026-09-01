@@ -35,8 +35,6 @@ export default function HomeScreen() {
     <ScrollView
       style={{ backgroundColor: colors.background, flex: 1 }}
       contentContainerStyle={{ padding: 16, paddingBottom: 110 }}
-      refreshing={loading}
-      onRefresh={refetch}
     >
       {/* Header */}
       <View style={styles.header}>
@@ -73,7 +71,7 @@ export default function HomeScreen() {
           {dash.todayMissions.length === 0 ? (
             <ThemeText variant="caption" style={{ color: colors.textSecondary }}>All caught up! New missions appear tomorrow.</ThemeText>
           ) : (
-            dash.todayMissions.map((m: Mission) => (
+            dash.todayMissions.map((m: any) => (
               <MissionCard key={m.id} mission={m} onPress={() => {}} />
             ))
           )}

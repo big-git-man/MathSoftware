@@ -40,7 +40,7 @@ export type ValidatedFile = UploadableFile & {
 export async function validateAndPrepare(file: UploadableFile): Promise<ValidatedFile | ValidationError> {
   const { uri, mimeType, size: givenSize } = file;
   if (!uri) return { ok: false as const, reason: 'No file selected' };
-  const info = await FileSystem.getInfoAsync(uri, { shouldCalcSum: false });
+  const info = await FileSystem.getInfoAsync(uri);
   if (!info.exists) return { ok: false as const, reason: 'File does not exist' };
   const size = givenSize ?? info.size ?? 0;
   if (size > MAX_FILE_SIZE) return { ok: false as const, reason: 'File is too large (max 100 MB)' };
@@ -84,7 +84,7 @@ async function generateThumbnailBlob(uri: string, mime: string): Promise<Blob | 
     const result = await manipulateAsync(
       uri,
       [{ resize: { width: 400 } }],
-      { compressImageQuality: 0.7, format: SaveFormat.JPEG, base64: false }
+      { compress: 0.7, format: SaveFormat.JPEG, base64: false }
     );
     return uriToBlob(result.uri, 'image/jpeg');
   } catch {

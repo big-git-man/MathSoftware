@@ -9,23 +9,16 @@ export type LevelBadgeProps = {
 
 export function LevelBadge({ level, size = 'md', style }: LevelBadgeProps) {
   const colors = useTheme();
-  const s = size === 'sm' ? styles.sm : size === 'lg' ? styles.lg : styles.md;
+  const padding = size === 'sm' ? [8, 2] : size === 'lg' ? [16, 6] : [12, 4];
+  const fontSize = size === 'sm' ? 12 : size === 'lg' ? 16 : 14;
   return (
     <View
       style={[
-        s.badge,
-        { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+        { borderRadius: 999, borderWidth: 1.5, paddingHorizontal: padding[0], paddingVertical: padding[1], backgroundColor: colors.primarySoft, borderColor: colors.primary },
         style,
       ]}
     >
-      <Text style={s.text}>Lv. {level}</Text>
+      <Text style={{ color: '#2563eb', fontSize, fontWeight: '700' }}>Lv. {level}</Text>
     </View>
   );
 }
-
-const base = { borderRadius: 999, borderWidth: 1.5, fontWeight: '700' };
-const styles = StyleSheet.create({
-  sm: { badge: { ...base, paddingHorizontal: 8, paddingVertical: 2 }, text: { color: '#2563eb', fontSize: 12 } },
-  md: { badge: { ...base, paddingHorizontal: 12, paddingVertical: 4 }, text: { color: '#2563eb', fontSize: 14 } },
-  lg: { badge: { ...base, paddingHorizontal: 16, paddingVertical: 6 }, text: { color: '#2563eb', fontSize: 16 } },
-});
