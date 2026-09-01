@@ -1,0 +1,21 @@
+{
+  "cli": {
+    "version:source": "package.json"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "preview": {
+      "ios": {},
+      "android": {}
+    }
+  },
+  "submit": {
+    "preview": {}
+  }
+}
