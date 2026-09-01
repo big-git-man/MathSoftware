@@ -1,5 +1,5 @@
 {
-  "name": "agent_a7f7cf8a-5816-47ed-951d-f0a64da6dcbc",
+  "name": "mathstutor",
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
@@ -41,7 +41,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit"
   },
   "private": true
 }
