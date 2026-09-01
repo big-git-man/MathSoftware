@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { listDocuments, getSignedUrl, DocumentMeta } from '../services/documents';
+import { listDocuments, getSignedUrl, DocumentMeta, searchDocuments } from '../services/documents';
 import { useAuth } from '../store/authStore';
 
 const CACHE_KEY = 'docs_cache';
 
-export function useDocuments() {
+export function useDocuments(search = '') {
   const user = useAuth((s) => s.user);
   const [data, setData] = useState<DocumentMeta[]>([]);
   const [loading, setLoading] = useState(false);
@@ -16,20 +16,19 @@ export function useDocuments() {
     (async () => {
       try {
         const raw = await AsyncStorage.getItem(CACHE_KEY);
-        if (raw && !cancelled) {
-          setData(JSON.parse(raw) as DocumentMeta[]);
-        }
-      } catch {
-        // ignore cache read errors
-      }
+        if (raw && !cancelled && !search) setData(JSON.parse(raw) as DocumentMeta[]);
+      } catch {}
     })();
     return () => { cancelled = true; };
-  }, [user]);
+  }, [user, search]);
 
   const fetch = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const { data: rows, error } = await listDocuments();
+    const result = search.trim()
+      ? await searchDocuments(search.trim())
+      : await listDocuments();
+    const { data: rows, error } = result;
     const docs: DocumentMeta[] = await Promise.all(
       (rows ?? []).map(async (r: any) => {
         const mime = r.mime_type ?? '';
@@ -42,8 +41,8 @@ export function useDocuments() {
           : { url: null as string | null };
         return {
           id: r.id,
-          title: r.title,
-          description: r.description,
+          title: r.ai_title ?? r.original_filename ?? 'Untitled',
+          description: r.ai_summary ?? '',
           type: isImage ? 'image' : 'pdf',
           mime_type: mime,
           uri: signed.url,
@@ -51,10 +50,10 @@ export function useDocuments() {
           storage_path: r.storage_path,
           bucket: r.storage_bucket ?? 'documents',
           document_type: r.document_type,
-          subject: r.subjects ? { name: r.subjects.name } : null,
-          course: r.courses ? { name: r.courses.name } : null,
-          unit: r.units ? { name: r.units.name } : null,
-          topic: r.topics ? { name: r.topics.name } : null,
+          subject: r.subject ?? r.subjects ?? null,
+          course: r.course ?? r.courses ?? null,
+          unit: r.unit ?? r.units ?? null,
+          topic: r.topic ?? r.topics ?? null,
           tags: r.tags ?? [],
           created_at: r.created_at,
           updated_at: r.updated_at,
@@ -63,16 +62,11 @@ export function useDocuments() {
     );
     setData(error ? [] : docs);
     setLoading(false);
-    try {
-      await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(error ? [] : docs));
-    } catch {
-      // ignore cache write errors
+    if (!search.trim()) {
+      try { await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(error ? [] : docs)); } catch {}
     }
-  }, [user]);
+  }, [user, search]);
 
-  useEffect(() => {
-    void fetch();
-  }, [fetch]);
-
+  useEffect(() => { void fetch(); }, [fetch]);
   return { data, loading, refetch: fetch };
 }
