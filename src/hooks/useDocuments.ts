@@ -1,11 +1,30 @@
 import { useEffect, useState, useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { listDocuments, getSignedUrl, DocumentMeta } from '../services/documents';
 import { useAuth } from '../store/authStore';
+
+const CACHE_KEY = 'docs_cache';
 
 export function useDocuments() {
   const user = useAuth((s) => s.user);
   const [data, setData] = useState<DocumentMeta[]>([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(CACHE_KEY);
+        if (raw && !cancelled) {
+          setData(JSON.parse(raw) as DocumentMeta[]);
+        }
+      } catch {
+        // ignore cache read errors
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
 
   const fetch = useCallback(async () => {
     if (!user) return;
@@ -44,6 +63,11 @@ export function useDocuments() {
     );
     setData(error ? [] : docs);
     setLoading(false);
+    try {
+      await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(error ? [] : docs));
+    } catch {
+      // ignore cache write errors
+    }
   }, [user]);
 
   useEffect(() => {

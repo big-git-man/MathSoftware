@@ -1,4 +1,5 @@
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Switch } from 'react-native';
+import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../src/theme';
 import { ThemeText } from '../../src/components/ui/Text';
@@ -7,12 +8,15 @@ import { Button } from '../../src/components/ui/Button';
 import { LevelBadge } from '../../src/components/ui/LevelBadge';
 import { useAuth } from '../../src/store/authStore';
 import { useDashboard } from '../../src/hooks/useDashboard';
+import { useDailyNotifications } from '../../src/hooks/useNotifications';
 
 export default function ProfileScreen() {
   const colors = useTheme();
   const router = useRouter();
   const user = useAuth((s) => s.user);
   const { data: dash } = useDashboard();
+  const [notifEnabled, setNotifEnabled] = useState(false);
+  useDailyNotifications(notifEnabled);
 
   const onSignOut = async () => {
     await useAuth.getState().signOut();
@@ -30,7 +34,13 @@ export default function ProfileScreen() {
             <ThemeText>{dash.level.level} · {dash.level.xpIntoLevel.toLocaleString()} / {dash.level.xpForNext.toLocaleString()} XP</ThemeText>
           </View>
         ) : null}
-        <Button title="Sign out" variant="secondary" onPress={onSignOut} style={{ marginTop: 32 }} />
+        <View style={{ marginTop: 32 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <ThemeText variant="body">Daily reminder @ 6pm</ThemeText>
+            <Switch value={notifEnabled} onValueChange={setNotifEnabled} />
+          </View>
+          <Button title="Sign out" variant="secondary" onPress={onSignOut} />
+        </View>
       </View>
     </Screen>
   );

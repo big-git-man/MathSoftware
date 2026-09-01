@@ -13,7 +13,8 @@ export default function PracticeScreen() {
       <View style={{ flex: 1, padding: 16 }}>
         <ThemeText variant="h3" style={{ marginBottom: 16 }}>Practice</ThemeText>
         <Button title="Start a practice session" onPress={() => router.push('/(app)/practice/session' as any)} style={{ marginBottom: 12 }} />
-        <Button title="Review mistakes" variant="secondary" onPress={() => router.push('/(app)/practice/mistakes' as any)} />
+        <Button title="Review mistakes" variant="secondary" onPress={() => router.push('/(app)/practice/mistakes' as any)} style={{ marginBottom: 12 }} />
+        <Button title="Daily Boss Battle" variant="danger" onPress={() => router.push('/(app)/boss' as any)} />
       </View>
     </Screen>
   );
