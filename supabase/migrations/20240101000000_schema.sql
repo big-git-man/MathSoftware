@@ -121,17 +121,7 @@ create table public.assignments (
   updated_at    timestamptz default now()
 );
 
--- documents can belong to one assignment (grouping multi-image homework)
-create table public.assignment_documents (
-  assignment_id uuid references public.assignments on delete cascade not null,
-  document_id   uuid references public.documents on delete cascade not null,
-  sort_order    int default 0,
-  primary key (assignment_id, document_id)
-);
-
--- ----------------------------------------------------------------------------
 -- Documents (binary files live in private Storage; DB holds metadata only)
--- ----------------------------------------------------------------------------
 create type public.document_type as enum ('homework','classwork','worksheet','test','exam','revision','notes','other');
 create type public.processing_status as enum ('uploading','processing','ocr','analyzing','ready','failed');
 
@@ -172,6 +162,14 @@ create index documents_status_idx        on public.documents (user_id, processin
 create index documents_ocr_gin           on public.documents using gin (to_tsvector('english', coalesce(ocr_text,'')));
 create index documents_topic_idx         on public.documents (topic_id) where topic_id is not null;
 create index documents_assignment_idx    on public.documents (assignment_id) where assignment_id is not null;
+
+-- Link assignments to their documents after both parent tables exist.
+create table public.assignment_documents (
+  assignment_id uuid references public.assignments on delete cascade not null,
+  document_id   uuid references public.documents on delete cascade not null,
+  sort_order    int default 0,
+  primary key (assignment_id, document_id)
+);
 
 -- multi-page PDF / multi-shot page breakdown for viewing
 create table public.document_pages (
