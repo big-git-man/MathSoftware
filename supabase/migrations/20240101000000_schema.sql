@@ -173,7 +173,7 @@ create table public.assignment_documents (
 
 -- multi-page PDF / multi-shot page breakdown for viewing
 create table public.document_pages (
-  id          uuid primary key default gen_random_uuid(),
+  id          uuid default gen_random_uuid(),
   document_id uuid references public.documents on delete cascade not null,
   user_id     uuid references auth.users on delete cascade not null,
   page_number int not null,
@@ -343,8 +343,8 @@ create table public.achievements (
   code            text unique not null,            -- first_homework, three_day_streak ...
   name            text not null,
   description     text,
-  icon            text,
-  category        text,
+  icon             text,
+  category         text,
   requirement_type text,                          -- count, milestone, streak, mastery, level
   requirement_value jsonb,
   xp_reward       int default 0,
@@ -417,4 +417,3 @@ create table public.ai_messages (
   content        text not null,
   created_at     timestamptz default now()
 );
-
