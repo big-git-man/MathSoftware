@@ -26,7 +26,7 @@ create table public.profiles (
 -- Subject -> Course -> Unit -> Topic -> Lesson
 -- ----------------------------------------------------------------------------
 create table public.subjects (
-  id           uuid primary key default uuid_generate_v4(),
+  id           uuid primary key default gen_random_uuid(),
   user_id      uuid references auth.users on delete cascade not null,
   name         text not null,
   description  text,
@@ -38,7 +38,7 @@ create table public.subjects (
 );
 
 create table public.courses (
-  id           uuid primary key default uuid_generate_v4(),
+  id           uuid primary key default gen_random_uuid(),
   user_id      uuid references auth.users on delete cascade not null,
   subject_id   uuid references public.subjects on delete cascade not null,
   name         text not null,
@@ -50,7 +50,7 @@ create table public.courses (
 );
 
 create table public.units (
-  id           uuid primary key default uuid_generate_v4(),
+  id           uuid primary key default gen_random_uuid(),
   user_id      uuid references auth.users on delete cascade not null,
   course_id    uuid references public.courses on delete cascade not null,
   name         text not null,
@@ -61,7 +61,7 @@ create table public.units (
 );
 
 create table public.topics (
-  id           uuid primary key default uuid_generate_v4(),
+  id           uuid primary key default gen_random_uuid(),
   user_id      uuid references auth.users on delete cascade not null,
   unit_id      uuid references public.units on delete cascade not null,
   name         text not null,
@@ -74,7 +74,7 @@ create table public.topics (
 );
 
 create table public.lessons (
-  id               uuid primary key default uuid_generate_v4(),
+  id               uuid primary key default gen_random_uuid(),
   user_id          uuid references auth.users on delete cascade not null,
   topic_id         uuid references public.topics on delete cascade not null,
   title            text not null,
@@ -90,7 +90,7 @@ create table public.lessons (
 -- Tags
 -- ----------------------------------------------------------------------------
 create table public.tags (
-  id         uuid primary key default uuid_generate_v4(),
+  id         uuid primary key default gen_random_uuid(),
   user_id    uuid references auth.users on delete cascade not null,
   name       text not null,
   color      text,
@@ -106,7 +106,7 @@ create type public.assignment_type as enum ('homework','classwork','worksheet','
 create type public.assignment_status as enum ('draft','pending','in_progress','completed','archived');
 
 create table public.assignments (
-  id            uuid primary key default uuid_generate_v4(),
+  id            uuid primary key default gen_random_uuid(),
   user_id       uuid references auth.users on delete cascade not null,
   name          text not null,
   course_id     uuid references public.courses,
@@ -126,7 +126,7 @@ create type public.document_type as enum ('homework','classwork','worksheet','te
 create type public.processing_status as enum ('uploading','processing','ocr','analyzing','ready','failed');
 
 create table public.documents (
-  id              uuid primary key default uuid_generate_v4(),
+  id              uuid primary key default gen_random_uuid(),
   user_id         uuid references auth.users on delete cascade not null,
   original_filename text not null,
   storage_bucket  text not null default 'documents',
@@ -173,7 +173,7 @@ create table public.assignment_documents (
 
 -- multi-page PDF / multi-shot page breakdown for viewing
 create table public.document_pages (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   document_id uuid references public.documents on delete cascade not null,
   user_id     uuid references auth.users on delete cascade not null,
   page_number int not null,
@@ -194,7 +194,7 @@ create table public.document_tags (
 -- Document processing jobs (background pipeline: OCR / AI / thumbnails)
 -- ----------------------------------------------------------------------------
 create table public.document_processing_jobs (
-  id           uuid primary key default uuid_generate_v4(),
+  id           uuid primary key default gen_random_uuid(),
   document_id  uuid references public.documents on delete cascade not null,
   user_id      uuid references auth.users on delete cascade not null,
   status       text not null default 'pending',   -- pending, uploading, processing, ocr, analyzing, ready, failed
@@ -215,7 +215,7 @@ create index processing_jobs_doc_idx     on public.document_processing_jobs (doc
 create type public.difficulty_level as enum ('easy','medium','hard');
 
 create table public.practice_questions (
-  id               uuid primary key default uuid_generate_v4(),
+  id               uuid primary key default gen_random_uuid(),
   user_id          uuid references auth.users on delete cascade,        -- null = shared bank
   topic_id         uuid references public.topics on delete cascade,
   course_id        uuid references public.courses on delete cascade,
@@ -240,7 +240,7 @@ create index practice_questions_topic_idx on public.practice_questions (user_id,
 create type public.session_kind as enum ('practice','revision','boss','exam','homework_check');
 
 create table public.study_sessions (
-  id            uuid primary key default uuid_generate_v4(),
+  id            uuid primary key default gen_random_uuid(),
   user_id       uuid references auth.users on delete cascade not null,
   kind          public.session_kind not null,
   subject_id    uuid references public.subjects,
@@ -256,7 +256,7 @@ create table public.study_sessions (
 create index study_sessions_user_idx on public.study_sessions (user_id, start_time desc);
 
 create table public.question_attempts (
-  id            uuid primary key default uuid_generate_v4(),
+  id            uuid primary key default gen_random_uuid(),
   user_id       uuid references auth.users not null,
   session_id    uuid references public.study_sessions,
   question_id   uuid references public.practice_questions,
@@ -277,7 +277,7 @@ create index attempts_user_topic_idx on public.question_attempts (user_id, topic
 create type public.mistake_kind as enum ('conceptual','calculation','sign','formula','reading','method','unknown');
 
 create table public.mistakes (
-  id            uuid primary key default uuid_generate_v4(),
+  id            uuid primary key default gen_random_uuid(),
   user_id       uuid references auth.users on delete cascade not null,
   question_id   uuid references public.practice_questions,
   attempt_id    uuid references public.question_attempts,
@@ -309,7 +309,7 @@ create table public.user_progression (
 create type public.activity_kind as enum ('practice','homework','classwork','lesson','mission','study_session','streak_bonus','achievement');
 
 create table public.xp_transactions (
-  id             uuid primary key default uuid_generate_v4(),
+  id             uuid primary key default gen_random_uuid(),
   user_id        uuid references auth.users on delete cascade not null,
   amount         int not null,
   reason         text not null,                    -- homework_completed, practice_completed, ...
@@ -326,7 +326,7 @@ create index xp_transactions_user_idx on public.xp_transactions (user_id, create
 create index xp_transactions_reason_idx on public.xp_transactions (user_id, reason);
 
 create table public.user_activity_logs (
-  id            uuid primary key default uuid_generate_v4(),
+  id            uuid primary key default gen_random_uuid(),
   user_id       uuid references auth.users on delete cascade not null,
   activity_type public.activity_kind not null,
   activity_date date not null,
@@ -339,7 +339,7 @@ create index activity_logs_user_date_idx on public.user_activity_logs (user_id, 
 -- Achievements + missions
 -- ----------------------------------------------------------------------------
 create table public.achievements (
-  id              uuid primary key default uuid_generate_v4(),
+  id              uuid primary key default gen_random_uuid(),
   code            text unique not null,            -- first_homework, three_day_streak ...
   name            text not null,
   description     text,
@@ -359,7 +359,7 @@ create table public.user_achievements (
 );
 
 create table public.missions (
-  id            uuid primary key default uuid_generate_v4(),
+  id            uuid primary key default gen_random_uuid(),
   code          text not null,
   type          text not null,                      -- daily, weekly
   name          text not null,
@@ -399,7 +399,7 @@ create table public.topic_mastery (
 -- AI conversations
 -- ----------------------------------------------------------------------------
 create table public.ai_conversations (
-  id           uuid primary key default uuid_generate_v4(),
+  id           uuid primary key default gen_random_uuid(),
   user_id      uuid references auth.users on delete cascade not null,
   title        text,
   document_id  uuid references public.documents,
@@ -411,9 +411,10 @@ create table public.ai_conversations (
 create index ai_conversations_user_idx on public.ai_conversations (user_id, updated_at desc);
 
 create table public.ai_messages (
-  id             uuid primary key default uuid_generate_v4(),
+  id             uuid primary key default gen_random_uuid(),
   conversation_id uuid references public.ai_conversations on delete cascade not null,
   role           text not null,                       -- user, assistant
   content        text not null,
   created_at     timestamptz default now()
 );
+
