@@ -57,6 +57,3 @@ create policy "documents_delete_owner"
     bucket_id = 'documents'
     and auth.uid()::text = split_part(name, '/', 2)
   );
-
--- Keep legacy default access restricted for this bucket.
-revoke all on function storage.read_only_user() from public;
