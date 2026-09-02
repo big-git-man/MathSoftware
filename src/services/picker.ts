@@ -17,7 +17,6 @@ export async function takePhoto(): Promise<UploadableFile | null> {
     fileName: a.fileName ?? undefined,
     width: a.width,
     height: a.height,
-    size: a.size,
   };
 }
 
@@ -36,7 +35,6 @@ export async function pickImages(): Promise<UploadableFile[]> {
     fileName: a.fileName ?? undefined,
     width: a.width,
     height: a.height,
-    size: a.size,
   }));
 }
 
