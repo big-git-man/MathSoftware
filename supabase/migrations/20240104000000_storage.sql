@@ -9,8 +9,8 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 values (
   'documents',
   'documents',
-  false,                       -- NEVER public
-  104857600,                   -- 100 MB hard cap on single objects
+  false,
+  104857600,
   array[
     'image/jpeg','image/png','image/heic','image/heif','image/webp',
     'application/pdf',
@@ -20,9 +20,10 @@ values (
 on conflict (id) do update
   set public = false, file_size_limit = 104857600;
 
--- Enable RLS on the storage.objects table.
-alter table storage.objects enable row level security;
-alter table storage.objects force row level security;
+-- Supabase owns storage.objects and manages RLS on this table.
+-- Do not ALTER storage.objects here, because the migration role is not the
+-- owner of Supabase's managed storage table. The table is already protected
+-- by RLS, and the policies below add the application-specific restrictions.
 
 -- SELECT / download: only the owning user (path segment: user/{uid}/...).
 create policy "documents_select_owner"
@@ -57,6 +58,5 @@ create policy "documents_delete_owner"
     and auth.uid()::text = split_part(name, '/', 2)
   );
 
--- Keep legacy default policies off for this bucket: revoke any "public" access
--- that Supabase ships for public buckets. Nothing here is public.
+-- Keep legacy default access restricted for this bucket.
 revoke all on function storage.read_only_user() from public;
