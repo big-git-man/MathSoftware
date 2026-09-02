@@ -33,7 +33,6 @@ export default ({ config }: { config: Record<string, any> }) => ({
     'expo-router',
     'expo-document-picker',
     ['expo-notifications', { icon: './assets/icon.png', color: '#ffffff' }],
-    'expo-image-manipulator',
   ],
   extra: {
     SUPABASE_URL: process.env.SUPABASE_URL ?? '',
