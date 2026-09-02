@@ -86,42 +86,28 @@ declare
   v_streak int := 0;
   v_best int := 0;
 begin
-  select max(activity_date) into v_last
-  from public.user_activity_logs
-  where user_id = p_user;
-
+  select max(activity_date) into v_last from public.user_activity_logs where user_id = p_user;
   if v_last is null then
     update public.user_progression
-    set current_streak = 0,
-        longest_streak = greatest(coalesce(longest_streak,0),0),
-        last_activity_date = null
+    set current_streak = 0, longest_streak = greatest(coalesce(longest_streak,0),0), last_activity_date = null
     where user_id = p_user;
     return 0;
   end if;
 
   with days as (
-    select distinct activity_date d
-    from public.user_activity_logs
-    where user_id = p_user
-  ),
-  numbered as (
-    select d, d - row_number() over(order by d)::int grp
-    from days
+    select distinct activity_date d from public.user_activity_logs where user_id = p_user
+  ), numbered as (
+    select d, d - row_number() over(order by d)::int grp from days
   )
   select count(*) into v_streak
   from numbered
   where grp = (select d - row_number() over(order by d)::int from days where d = v_last);
 
   with days as (
-    select distinct activity_date d
-    from public.user_activity_logs
-    where user_id = p_user
-  ),
-  numbered as (
-    select d, d - row_number() over(order by d)::int grp
-    from days
-  ),
-  runs as (
+    select distinct activity_date d from public.user_activity_logs where user_id = p_user
+  ), numbered as (
+    select d, d - row_number() over(order by d)::int grp from days
+  ), runs as (
     select grp, count(*) c from numbered group by grp
   )
   select coalesce(max(c),0) into v_best from runs;
@@ -132,7 +118,6 @@ begin
       last_activity_date = v_last,
       updated_at = now()
   where user_id = p_user;
-
   return v_streak;
 end;
 $$ language plpgsql;
@@ -146,16 +131,11 @@ begin
   where um.user_id = p_user
     and um.status = 'active'
     and progress < target
-    and exists (
-      select 1 from public.missions m
-      where m.id = um.mission_id and m.requirement->>'kind' = 'xp'
-    );
+    and exists (select 1 from public.missions m where m.id = um.mission_id and m.requirement->>'kind' = 'xp');
 
   update public.user_missions um
   set status = 'completed', completed_at = now()
-  where um.user_id = p_user
-    and um.status = 'active'
-    and progress >= target;
+  where um.user_id = p_user and um.status = 'active' and progress >= target;
 end;
 $$ language plpgsql;
 
@@ -175,8 +155,7 @@ declare
   v_balance int;
 begin
   if p_transaction_key is not null and exists (
-    select 1 from public.xp_transactions
-    where user_id = p_user and transaction_key = p_transaction_key
+    select 1 from public.xp_transactions where user_id = p_user and transaction_key = p_transaction_key
   ) then
     select total_xp into v_balance from public.user_progression where user_id = p_user;
     return coalesce(v_balance,0);
@@ -187,25 +166,15 @@ begin
   values
     (p_user,p_amount,p_reason,p_description,p_entity_type,p_entity_id,p_source,p_transaction_key);
 
-  insert into public.user_progression(user_id,total_xp)
-  values(p_user,0)
-  on conflict(user_id) do nothing;
+  insert into public.user_progression(user_id,total_xp) values(p_user,0) on conflict(user_id) do nothing;
 
   update public.user_progression
-  set total_xp = total_xp + p_amount,
-      last_xp_at = now(),
-      updated_at = now()
+  set total_xp = total_xp + p_amount, last_xp_at = now(), updated_at = now()
   where user_id = p_user;
 
   update public.user_progression up
-  set current_level = coalesce((
-        select max(level) from public.level_thresholds lt
-        where lt.cumulative_xp <= up.total_xp
-      ),1),
-      current_xp = up.total_xp - coalesce((
-        select max(cumulative_xp) from public.level_thresholds lt
-        where lt.cumulative_xp <= up.total_xp
-      ),0),
+  set current_level = coalesce((select max(level) from public.level_thresholds lt where lt.cumulative_xp <= up.total_xp),1),
+      current_xp = up.total_xp - coalesce((select max(cumulative_xp) from public.level_thresholds lt where lt.cumulative_xp <= up.total_xp),0),
       updated_at = now()
   where user_id = p_user;
 
@@ -242,20 +211,17 @@ declare
 begin
   insert into public.user_missions(user_id,mission_id,date_key,status,progress,target)
   select p_user,m.id,v_day_key,'active',0,(m.requirement->>'target')::int
-  from public.missions m
-  where m.type='daily'
+  from public.missions m where m.type='daily'
     and not exists(select 1 from public.user_missions um where um.user_id=p_user and um.mission_id=m.id and um.date_key=v_day_key);
 
   insert into public.user_missions(user_id,mission_id,date_key,status,progress,target)
   select p_user,m.id,v_week_key,'active',0,(m.requirement->>'target')::int
-  from public.missions m
-  where m.type='weekly'
+  from public.missions m where m.type='weekly'
     and not exists(select 1 from public.user_missions um where um.user_id=p_user and um.mission_id=m.id and um.date_key=v_week_key);
 
   return query
   select m.id,m.code,m.type,m.name,um.progress,um.target,um.status,m.xp_reward
-  from public.user_missions um
-  join public.missions m on m.id=um.mission_id
+  from public.user_missions um join public.missions m on m.id=um.mission_id
   where um.user_id=p_user and um.date_key in(v_day_key,v_week_key);
 end;
 $$ language plpgsql;
@@ -271,16 +237,13 @@ declare
 begin
   update public.user_missions um
   set progress=least(target,progress+p_increment)
-  where um.user_id=p_user
-    and um.status='active'
-    and um.date_key in(v_day_key,v_week_key)
+  where um.user_id=p_user and um.status='active' and um.date_key in(v_day_key,v_week_key)
     and exists(select 1 from public.missions m where m.id=um.mission_id and m.code=p_code);
 
   for r in
     select um.mission_id,m.code,m.xp_reward
     from public.user_missions um join public.missions m on m.id=um.mission_id
-    where um.user_id=p_user and um.status='active'
-      and um.date_key in(v_day_key,v_week_key)
+    where um.user_id=p_user and um.status='active' and um.date_key in(v_day_key,v_week_key)
       and m.code=p_code and um.progress>=um.target
   loop
     update public.user_missions set status='completed',completed_at=now()
@@ -314,27 +277,18 @@ begin
   elsif p_difficulty = 'medium' then v_weight := 1.2;
   end if;
 
-  select mastery_score into v_old from public.topic_mastery
-  where user_id=p_user and topic_id=p_topic;
+  select mastery_score into v_old from public.topic_mastery where user_id=p_user and topic_id=p_topic;
+  if not found then v_old:=0; end if;
 
-  if not found then
-    v_old:=0;
-  end if;
-
-  if p_correct then
-    v_new := least(100, v_old + 5 * v_weight);
-  else
-    v_new := greatest(0, v_old - 3 * v_weight);
+  if p_correct then v_new := least(100, v_old + 5 * v_weight);
+  else v_new := greatest(0, v_old - 3 * v_weight);
   end if;
 
   insert into public.topic_mastery(user_id,topic_id,mastery_score,evidence,last_practiced,updated_at)
   values(p_user,p_topic,v_new,jsonb_build_object('difficulty',p_difficulty),now(),now())
   on conflict(user_id,topic_id) do update set
-    mastery_score=excluded.mastery_score,
-    evidence=excluded.evidence,
-    last_practiced=excluded.last_practiced,
-    updated_at=now();
-
+    mastery_score=excluded.mastery_score, evidence=excluded.evidence,
+    last_practiced=excluded.last_practiced, updated_at=now();
   return v_new;
 end;
 $$ language plpgsql;
@@ -351,10 +305,7 @@ declare
   v_value int;
 begin
   for a in select * from public.achievements loop
-    if exists(select 1 from public.user_achievements ua where ua.user_id=p_user and ua.achievement_id=a.id) then
-      continue;
-    end if;
-
+    if exists(select 1 from public.user_achievements ua where ua.user_id=p_user and ua.achievement_id=a.id) then continue; end if;
     v_value := 0;
     if a.requirement_type='level' then
       select current_level into v_value from public.user_progression where user_id=p_user;
@@ -379,5 +330,78 @@ begin
     end if;
   end loop;
   return v_count;
+end;
+$$ language plpgsql;
+
+-- ---------------------------------------------------------------------
+-- Default Mathematics curriculum
+-- ---------------------------------------------------------------------
+create or replace function public.init_default_curriculum(p_user uuid)
+returns void
+as $$
+declare
+  v_subject uuid;
+  v_course uuid;
+  v_unit uuid;
+begin
+  if exists (select 1 from public.subjects where user_id = p_user) then return; end if;
+
+  insert into public.subjects (user_id,name,description,icon,color,position)
+  values (p_user,'Mathematics','Core mathematics curriculum','calculator','#1e3a8a',0)
+  returning id into v_subject;
+
+  insert into public.courses (user_id,subject_id,name,position)
+  values (p_user,v_subject,'Algebra',0) returning id into v_course;
+
+  insert into public.units (user_id,course_id,name,position)
+  values (p_user,v_course,'Foundations',0) returning id into v_unit;
+  insert into public.topics (user_id,unit_id,name,description,position,color) values
+    (p_user,v_unit,'Numbers & Operations','Whole numbers, integers, rationals',0,'#2563eb'),
+    (p_user,v_unit,'Integers','Positive and negative integers',1,'#2563eb'),
+    (p_user,v_unit,'Fractions','Fraction operations and equivalence',2,'#ea580c'),
+    (p_user,v_unit,'Decimals','Decimal operations',3,'#2563eb');
+
+  insert into public.units (user_id,course_id,name,position)
+  values (p_user,v_course,'Linear Equations',1) returning id into v_unit;
+  insert into public.topics (user_id,unit_id,name,description,position,color) values
+    (p_user,v_unit,'Algebra','Variables and expressions',0,'#7c3aed'),
+    (p_user,v_unit,'Solving One-Step Equations','Isolate the variable',1,'#7c3aed'),
+    (p_user,v_unit,'Solving Two-Step Equations','Two operation equations',2,'#7c3aed'),
+    (p_user,v_unit,'Multi-Step Equations','Equations with multiple steps',3,'#7c3aed'),
+    (p_user,v_unit,'Linear Functions','Coordinate plane and linear graphs',4,'#7c3aed');
+
+  insert into public.courses (user_id,subject_id,name,position)
+  values (p_user,v_subject,'Geometry',1) returning id into v_course;
+  insert into public.units (user_id,course_id,name,position)
+  values (p_user,v_course,'Basics',0) returning id into v_unit;
+  insert into public.topics (user_id,unit_id,name,description,position,color) values
+    (p_user,v_unit,'Points, Lines & Angles','Geometric primitives',0,'#0d9488'),
+    (p_user,v_unit,'Triangles','Triangle properties and types',1,'#0d9488'),
+    (p_user,v_unit,'Geometry','Angles, area and perimeter',2,'#0d9488');
+  insert into public.units (user_id,course_id,name,position)
+  values (p_user,v_course,'Area & Perimeter',1) returning id into v_unit;
+  insert into public.topics (user_id,unit_id,name,description,position,color)
+  values (p_user,v_unit,'Area & Perimeter','Rectangle, triangle, circle measures',0,'#0d9488');
+
+  insert into public.courses (user_id,subject_id,name,position)
+  values (p_user,v_subject,'Statistics',2) returning id into v_course;
+  insert into public.units (user_id,course_id,name,position)
+  values (p_user,v_course,'Data Analysis',0) returning id into v_unit;
+  insert into public.topics (user_id,unit_id,name,description,position,color) values
+    (p_user,v_unit,'Statistics','Mean, median, mode, probability basics',0,'#c2185b'),
+    (p_user,v_unit,'Probability','Basic probability',1,'#c2185b');
+end;
+$$ language plpgsql;
+
+-- Complete a lesson, award progress XP/activity, and check achievements.
+create or replace function public.complete_lesson(p_user uuid, p_lesson uuid)
+returns void
+as $$
+begin
+  insert into public.lesson_completions(user_id,lesson_id)
+  values(p_user,p_lesson)
+  on conflict(user_id,lesson_id) do nothing;
+  perform public.log_activity(p_user,'lesson',current_date,jsonb_build_object('lesson_id',p_lesson));
+  perform public.check_achievements(p_user);
 end;
 $$ language plpgsql;
